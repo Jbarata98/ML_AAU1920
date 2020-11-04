@@ -1,0 +1,286 @@
+Ex 3, notes on b and c alineas)
+b - they increase as we advance backwards into the network meaning that the error decreases. Considering this, the gradient decreases as we advance further on the opposite direction.
+A gradient is simply the derivative and the reason you're working with derivatives mathematically is that gradients point in the direction of the greatest rate of increase of the (error) function.
+ Conclusion: Since you wanna minimize the error, you go the opposite way of the gradient.
+ As the sigmoid always has a positive derivative, the slope of
+the error function provides a greater or lesser descent direction which can be
+followed. We can think of our search algorithm as a physical process in which a small sphere is allowed to roll on the surface of the error function until it reaches the bottom.
+
+the sigmoid function and its derivative
+If the weights are initialized too large:
+σ(x) will be close to either 0 and 1
+∂
+∂x σ(x) = σ(x) · (1 − σ(x)) will be close to 0
+ gradients will vanish and the rest of the backward pass will be affected due to the multiplication
+in the chain rule.
+
+ex 4)
+Playground tensorflow notes:
+ for very easy problems we don't even need 2 layers, for example for the first dataset only 3 neurons and 1 layer should be enough, but 2 wn't work
+ high regularization makes the neurons start to see 0's very rapidly because they try to "regulate" the observations really soon
+ overfitting can be seen on the last dataset when we do 3 layers even with 12 neurons, does it with 4 layers ( still a bit overfitting)
+ relu and tanh in the example could learn the class but sigmoid and linear couldnt. SO the activation function is very important aswell
+ 
+ 
+To build the neural network for the 1st selfstudy we needed:
+a neural network, which will encode a softmax function. For this we need a (randomly initialized) weight matrix and a bias, and for both of them we need their gradients wrt. our error function (yet to be defined) in order to perform learning.
+ 
+
+Since the backward() function accumulates gradients, and you don’t want to mix up gradients between minibatches, you have to zero them out at the start of a new minibatch. This is exactly like how a general (additive) accumulator variable is initialized to 0 in code.
+
+
+SELFSTUDY_5 notes :
+
+
+EXERCISE 1:
+
+results ( no changes) : 
+Epoch: 0, B-idx: 0, Training loss: 2.38022780418396
+Epoch: 0, B-idx: 100, Training loss: 1.5801602602005005
+Epoch: 0, B-idx: 200, Training loss: 1.2157402038574219
+Epoch: 0, B-idx: 300, Training loss: 1.019757866859436
+Epoch: 0, B-idx: 400, Training loss: 0.8988943696022034
+Epoch: 0, B-idx: 500, Training loss: 0.8174216151237488
+Epoch: 0, B-idx: 600, Training loss: 0.7572253942489624
+Epoch: 0, B-idx: 700, Training loss: 0.7114992141723633
+Epoch: 1, B-idx: 0, Training loss: 0.6823754906654358
+Epoch: 1, B-idx: 100, Training loss: 0.652481734752655
+Epoch: 1, B-idx: 200, Training loss: 0.6277546286582947
+Epoch: 1, B-idx: 300, Training loss: 0.6059237718582153
+Epoch: 1, B-idx: 400, Training loss: 0.588652491569519
+Epoch: 1, B-idx: 500, Training loss: 0.5723211765289307
+Epoch: 1, B-idx: 600, Training loss: 0.5582956671714783
+Epoch: 1, B-idx: 700, Training loss: 0.5457534790039062
+
+(increased learning rate to 0.5):
+Epoch: 0, B-idx: 0, Training loss: 2.048304319381714
+Epoch: 0, B-idx: 100, Training loss: 0.4605849087238312
+Epoch: 0, B-idx: 200, Training loss: 0.39762118458747864
+Epoch: 0, B-idx: 300, Training loss: 0.37991219758987427
+Epoch: 0, B-idx: 400, Training loss: 0.3540995419025421
+Epoch: 0, B-idx: 500, Training loss: 0.3405357301235199
+Epoch: 0, B-idx: 600, Training loss: 0.33948078751564026
+Epoch: 0, B-idx: 700, Training loss: 0.32500937581062317
+Epoch: 1, B-idx: 0, Training loss: 0.32415100932121277
+Epoch: 1, B-idx: 100, Training loss: 0.3352477252483368
+Epoch: 1, B-idx: 200, Training loss: 0.311568021774292
+Epoch: 1, B-idx: 300, Training loss: 0.319079726934433
+Epoch: 1, B-idx: 400, Training loss: 0.3143515884876251
+Epoch: 1, B-idx: 500, Training loss: 0.3111800253391266
+Epoch: 1, B-idx: 600, Training loss: 0.31165605783462524
+Epoch: 1, B-idx: 700, Training loss: 0.3016223609447479
+
+
+(increased learning rate to 0.1):
+Epoch: 0, B-idx: 0, Training loss: 2.048304319381714
+Epoch: 0, B-idx: 100, Training loss: 0.4605849087238312
+Epoch: 0, B-idx: 200, Training loss: 0.39762118458747864
+Epoch: 0, B-idx: 300, Training loss: 0.37991219758987427
+Epoch: 0, B-idx: 400, Training loss: 0.3540995419025421
+Epoch: 0, B-idx: 500, Training loss: 0.3405357301235199
+Epoch: 0, B-idx: 600, Training loss: 0.33948078751564026
+Epoch: 0, B-idx: 700, Training loss: 0.32500937581062317
+Epoch: 1, B-idx: 0, Training loss: 0.32415100932121277
+Epoch: 1, B-idx: 100, Training loss: 0.3352477252483368
+Epoch: 1, B-idx: 200, Training loss: 0.311568021774292
+Epoch: 1, B-idx: 300, Training loss: 0.319079726934433
+Epoch: 1, B-idx: 400, Training loss: 0.3143515884876251
+Epoch: 1, B-idx: 500, Training loss: 0.3111800253391266
+Epoch: 1, B-idx: 600, Training loss: 0.31165605783462524
+Epoch: 1, B-idx: 700, Training loss: 0.3016223609447479
+
+
+
+(learning rate to 0.05):  
+Epoch: 0, B-idx: 0, Training loss: 2.305896043777466
+Epoch: 0, B-idx: 100, Training loss: 0.8172963857650757
+Epoch: 0, B-idx: 200, Training loss: 0.6285049319267273
+Epoch: 0, B-idx: 300, Training loss: 0.5447750091552734
+Epoch: 0, B-idx: 400, Training loss: 0.5024213194847107
+Epoch: 0, B-idx: 500, Training loss: 0.4716464579105377
+Epoch: 0, B-idx: 600, Training loss: 0.45050671696662903
+Epoch: 0, B-idx: 700, Training loss: 0.4317910969257355
+Epoch: 1, B-idx: 0, Training loss: 0.4224793612957001
+Epoch: 1, B-idx: 100, Training loss: 0.41213247179985046
+Epoch: 1, B-idx: 200, Training loss: 0.4041590690612793
+Epoch: 1, B-idx: 300, Training loss: 0.39428335428237915
+Epoch: 1, B-idx: 400, Training loss: 0.38973820209503174
+Epoch: 1, B-idx: 500, Training loss: 0.38223811984062195
+Epoch: 1, B-idx: 600, Training loss: 0.37749266624450684
+Epoch: 1, B-idx: 700, Training loss: 0.3708116412162781
+
+
+note: we can recover the lost test accuracy from a larger batch size by increasing the learning rate.
+
+
+(learning rate to 0.05 and increased batch size to double) -- 
+Epoch: 0, B-idx: 0, Training loss: 2.3027162551879883
+Epoch: 0, B-idx: 100, Training loss: 0.8162579536437988
+Epoch: 0, B-idx: 200, Training loss: 0.6238305568695068
+Epoch: 0, B-idx: 300, Training loss: 0.5440292358398438
+Epoch: 1, B-idx: 0, Training loss: 0.5024474859237671
+Epoch: 1, B-idx: 100, Training loss: 0.4741002321243286
+Epoch: 1, B-idx: 200, Training loss: 0.4521510899066925
+Epoch: 1, B-idx: 300, Training loss: 0.4342478811740875
+
+
+(batch-size tripled 192) learning rate 0.05
+Epoch: 0, B-idx: 0, Training loss: 2.3178775310516357
+Epoch: 0, B-idx: 100, Training loss: 0.8152483105659485
+Epoch: 0, B-idx: 200, Training loss: 0.6227080225944519
+Epoch: 1, B-idx: 0, Training loss: 0.568819522857666
+Epoch: 1, B-idx: 100, Training loss: 0.5145745277404785
+Epoch: 1, B-idx: 200, Training loss: 0.4805780351161957
+
+same batchsize but if we train with a higher training rate as stated previously it compensates
+Epoch: 0, B-idx: 0, Training loss: 2.2341957092285156
+Epoch: 0, B-idx: 100, Training loss: 0.619651198387146
+Epoch: 0, B-idx: 200, Training loss: 0.4989413321018219
+Epoch: 1, B-idx: 0, Training loss: 0.4647427797317505
+Epoch: 1, B-idx: 100, Training loss: 0.42923229932785034
+Epoch: 1, B-idx: 200, Training loss: 0.4077131152153015
+Epoch: 2, B-idx: 0, Training loss: 0.39699843525886536
+Epoch: 2, B-idx: 100, Training loss: 0.38321706652641296
+Epoch: 2, B-idx: 200, Training loss: 0.37364915013313293
+Epoch: 3, B-idx: 0, Training loss: 0.3677305579185486
+Epoch: 3, B-idx: 100, Training loss: 0.359892338514328
+Epoch: 3, B-idx: 200, Training loss: 0.3543632924556732
+
+
+
+with momentum: ( converges way faster to a number of loss value)
+Epoch: 0, B-idx: 0, Training loss: 2.278000593185425
+Epoch: 0, B-idx: 100, Training loss: 0.4364854693412781
+Epoch: 0, B-idx: 200, Training loss: 0.43754860758781433
+Epoch: 0, B-idx: 300, Training loss: 0.35286760330200195
+Epoch: 0, B-idx: 400, Training loss: 0.35470178723335266
+Epoch: 0, B-idx: 500, Training loss: 0.33584681153297424
+Epoch: 0, B-idx: 600, Training loss: 0.3390689790248871
+Epoch: 0, B-idx: 700, Training loss: 0.32307168841362
+Epoch: 1, B-idx: 0, Training loss: 0.3201238512992859
+Epoch: 1, B-idx: 100, Training loss: 0.3304661214351654
+Epoch: 1, B-idx: 200, Training loss: 0.3565625846385956
+Epoch: 1, B-idx: 300, Training loss: 0.3078937232494354
+Epoch: 1, B-idx: 400, Training loss: 0.31548014283180237
+Epoch: 1, B-idx: 500, Training loss: 0.3038941025733948
+Epoch: 1, B-idx: 600, Training loss: 0.313158243894577
+Epoch: 1, B-idx: 700, Training loss: 0.2996561527252197
+Epoch: 2, B-idx: 0, Training loss: 0.30164462327957153
+Epoch: 2, B-idx: 100, Training loss: 0.3106640577316284
+Epoch: 2, B-idx: 200, Training loss: 0.34027931094169617
+Epoch: 2, B-idx: 300, Training loss: 0.29483553767204285
+Epoch: 2, B-idx: 400, Training loss: 0.3015992343425751
+Epoch: 2, B-idx: 500, Training loss: 0.29100584983825684
+Epoch: 2, B-idx: 600, Training loss: 0.3023415505886078
+Epoch: 2, B-idx: 700, Training loss: 0.289095401763916
+Epoch: 3, B-idx: 0, Training loss: 0.29192444682121277
+Epoch: 3, B-idx: 100, Training loss: 0.30070772767066956
+Epoch: 3, B-idx: 200, Training loss: 0.33117446303367615
+Epoch: 3, B-idx: 300, Training loss: 0.2874299883842468
+Epoch: 3, B-idx: 400, Training loss: 0.293671190738678
+Epoch: 3, B-idx: 500, Training loss: 0.2832318842411041
+Epoch: 3, B-idx: 600, Training loss: 0.29563045501708984
+Epoch: 3, B-idx: 700, Training loss: 0.2824966013431549
+
+
+
+on 3) didn't really see many different values change batch size or batch_idx % ( not sure)
+
+on 4)
+trying the value with test-set: ( smaller size so is able to verify more loss values in the same amount of time )
+Epoch: 0, B-idx: 0, Test loss: 0.9032594505346047
+Epoch: 0, B-idx: 0, Test loss: 0.9120536986387001
+Epoch: 0, B-idx: 0, Test loss: 0.9092088724082371
+Epoch: 0, B-idx: 0, Test loss: 0.9024434382060789
+Epoch: 0, B-idx: 0, Test loss: 0.9020381828524032
+Epoch: 0, B-idx: 0, Test loss: 0.8990131312946104
+Epoch: 0, B-idx: 0, Test loss: 0.9026273668936964
+Epoch: 0, B-idx: 0, Test loss: 0.9032735734615686
+Epoch: 0, B-idx: 0, Test loss: 0.9026956963089278
+Epoch: 0, B-idx: 0, Test loss: 0.9068114251460669
+Epoch: 0, B-idx: 0, Test loss: 0.9060748894259615
+Epoch: 0, B-idx: 0, Test loss: 0.8988586529245917
+Epoch: 0, B-idx: 0, Test loss: 0.8983934836567573
+Epoch: 0, B-idx: 0, Test loss: 0.9022816318386006
+Epoch: 0, B-idx: 0, Test loss: 0.9079031775582511
+Epoch: 0, B-idx: 0, Test loss: 0.9062907448354757
+Epoch: 0, B-idx: 0, Test loss: 0.9020809115103956
+Epoch: 0, B-idx: 0, Test loss: 0.9030115863062301
+Epoch: 0, B-idx: 0, Test loss: 0.9027778405063557
+Epoch: 0, B-idx: 0, Test loss: 0.904737337580267
+Epoch: 0, B-idx: 0, Test loss: 0.9091221307808498
+Epoch: 0, B-idx: 0, Test loss: 0.8980470715828661
+Epoch: 0, B-idx: 0, Test loss: 0.8993813676654168
+Epoch: 0, B-idx: 0, Test loss: 0.8990310261834342
+Epoch: 0, B-idx: 0, Test loss: 0.8994835851327428
+Epoch: 0, B-idx: 0, Test loss: 0.8969819005930199
+Epoch: 0, B-idx: 0, Test loss: 0.9069553130077865
+Epoch: 0, B-idx: 0, Test loss: 0.898909607023563
+Epoch: 0, B-idx: 0, Test loss: 0.8965587908366941
+Epoch: 0, B-idx: 0, Test loss: 0.8992790883442141
+Epoch: 0, B-idx: 0, Test loss: 0.9018122823733203
+Epoch: 0, B-idx: 0, Test loss: 0.8982346057891846
+Epoch: 0, B-idx: 0, Test loss: 0.8971842043804672
+Epoch: 0, B-idx: 0, Test loss: 0.8993852970735082
+Epoch: 0, B-idx: 0, Test loss: 0.8972069036285832
+Epoch: 0, B-idx: 0, Test loss: 0.9012190924500519
+Epoch: 0, B-idx: 0, Test loss: 0.902051606268253
+Epoch: 0, B-idx: 0, Test loss: 0.9029288067007964
+Epoch: 0, B-idx: 0, Test loss: 0.9025707278611526
+Epoch: 0, B-idx: 0, Test loss: 0.9052268491601044
+Epoch: 0, B-idx: 0, Test loss: 0.8991984938675502
+Epoch: 0, B-idx: 0, Test loss: 0.9003605482713232
+Epoch: 0, B-idx: 0, Test loss: 0.8999228297539477
+Epoch: 0, B-idx: 0, Test loss: 0.8965501886493755
+Epoch: 0, B-idx: 0, Test loss: 0.9036110099756492
+Epoch: 0, B-idx: 0, Test loss: 0.9042978118050773
+Epoch: 0, B-idx: 0, Test loss: 0.8935023574334271
+Epoch: 0, B-idx: 0, Test loss: 0.8958657215226371
+Epoch: 0, B-idx: 0, Test loss: 0.9029971541098829
+Epoch: 0, B-idx: 0, Test loss: 0.8978556889408039
+Epoch: 0, B-idx: 0, Test loss: 0.903354711127731
+Epoch: 0, B-idx: 0, Test loss: 0.8982708645316789
+Epoch: 0, B-idx: 0, Test loss: 0.8959785553644288
+Epoch: 0, B-idx: 0, Test loss: 0.9054845841425769
+Epoch: 0, B-idx: 0, Test loss: 0.8947506805635849
+Epoch: 0, B-idx: 0, Test loss: 0.9024538813896898
+Epoch: 0, B-idx: 0, Test loss: 0.8991226812578598
+Epoch: 0, B-idx: 0, Test loss: 0.901083101641457
+Epoch: 0, B-idx: 0, Test loss: 0.901444212445673
+Epoch: 0, B-idx: 0, Test loss: 0.8996410707257828
+Epoch: 0, B-idx: 0, Test loss: 0.897960715698746
+Epoch: 0, B-idx: 0, Test loss: 0.8967707055919575
+Epoch: 0, B-idx: 0, Test loss: 0.8967282985741237
+Epoch: 0, B-idx: 0, Test loss: 0.9067828576519804
+Epoch: 0, B-idx: 0, Test loss: 0.8989196003607984
+Epoch: 0, B-idx: 0, Test loss: 0.8989110712735158
+Epoch: 0, B-idx: 0, Test loss: 0.8968581669735458
+Epoch: 0, B-idx: 0, Test loss: 0.899593544456194
+Epoch: 0, B-idx: 0, Test loss: 0.8942120884949306
+Epoch: 0, B-idx: 0, Test loss: 0.8994142075754562
+Epoch: 0, B-idx: 0, Test loss: 0.9044103464990292
+Epoch: 0, B-idx: 0, Test loss: 0.9022632949757126
+Epoch: 0, B-idx: 0, Test loss: 0.9031646127970714
+Epoch: 0, B-idx: 0, Test loss: 0.9038091538087377
+Epoch: 0, B-idx: 0, Test loss: 0.9027157504603548
+Epoch: 0, B-idx: 0, Test loss: 0.9058531815150999
+
+
+ACCURACY 0,9166 without  and 0,92 with momentum
+
+larger sizes - generalizes better but takes longer to train
+
+less overfitting
+exercise 4: increased batch size to 100 % and increased the time of testing/training to 180 seconds
+
+Train Epoch: 0 [0/48000 (0%)]	Loss: 2.290637
+Train Epoch: 0 [640/48000 (1%)]	Loss: 1.407068
+Train Epoch: 0 [1280/48000 (3%)]	Loss: 0.733579
+Train Epoch: 0 [1920/48000 (4%)]	Loss: 0.597965
+Train Epoch: 0 [2560/48000 (5%)]	Loss: 0.263340
+Train Epoch: 0 [3200/48000 (7%)]	Loss: 0.323696
+
+
+
+
+

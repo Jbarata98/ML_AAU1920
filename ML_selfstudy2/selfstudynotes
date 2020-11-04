@@ -1,0 +1,9 @@
+Images taken are in the folder.
+
+Firstly ran all the models and took the results.
+
+logistic regression moves with non-linear function hence can work with linearly and non-linearly separable problems. It can be used for predicting the probability of an event. But using l1 regularization it manages to separate the data good enough.
+
+For gaussian mixture data:
+
+firstly gaussian mixture models explained

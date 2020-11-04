@@ -1,0 +1,134 @@
+net
+{
+    node_size = (80 40);
+    HR_realname_BH = "BH";
+    HR_realname_MH = "MH";
+    HR_realname_SC = "SC";
+    HR_realname_FC = "FC";
+    HR_Color_DiscreteFunction = "5";
+    HR_Color_Function = "4";
+    HR_Monitor_Mean_Variance = "1";
+    HR_Desc = "";
+    HR_OOBN_CheckConsistency = "1";
+    HR_OOBN_FitExpand = "1";
+    HR_Zoom_ZoomFactor = "100";
+    HR_Groups_GroupColors = "";
+    HR_Groups_GroupNames = "";
+    HR_Groups_UserGroupsNo = "0";
+    HR_Color_Interface = "-1";
+    HR_Color_Instance = "-1";
+    HR_Color_Utility = "36";
+    HR_Color_Decision = "17";
+    HR_Color_ContinuousChance = "-1";
+    HR_Color_DiscreteChance = "16";
+    HR_Monitor_InitSD = "2";
+    HR_Monitor_Utility_Arrange = "0";
+    HR_Monitor_Chance_Utility = "1";
+    HR_Monitor_InitStates = "5";
+    HR_Monitor_OpenGraph = "0";
+    HR_Monitor_GraphPrecision = "100";
+    HR_Monitor_AutoUpdGraph = "0";
+    HR_Compile_MaxMinimalSeparators = "100000";
+    HR_Compile_ApproxEpsilon = "1.0E-5";
+    HR_Compile_Approximate = "0";
+    HR_Compile_SaveToMemory = "0";
+    HR_Compile_Compress = "0";
+    HR_Compile_TriangMethod = "0";
+    HR_Propagate_AutoNormal = "1";
+    HR_Propagate_AutoSum = "1";
+    HR_Propagate_Auto = "1";
+    HR_Font_Italic = "0";
+    HR_Font_Weight = "400";
+    HR_Font_Size = "-12";
+    HR_Font_Name = "Arial";
+    HR_Grid_GridShow = "0";
+    HR_Grid_GridSnap = "1";
+    HR_Grid_Y = "10";
+    HR_Grid_X = "10";
+}
+
+node FC
+{
+    label = "";
+    position = (390 90);
+    states = ("" "" "" "");
+    subtype = number;
+    state_values = (0 1 2 3);
+    HR_Desc = "";
+    HR_State_3 = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_Group = "0";
+}
+
+node SC
+{
+    label = "";
+    position = (530 100);
+    states = ("0" "1" "2");
+    HR_State_2 = "";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+}
+
+node MH
+{
+    label = "";
+    position = (230 90);
+    states = ("no" "1a" "2v" "2a" "fl" "st" "3v" "sfl");
+    HR_State_7 = "";
+    HR_State_6 = "";
+    HR_State_5 = "";
+    HR_State_4 = "";
+    HR_State_3 = "";
+    HR_State_2 = "";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+}
+
+node BH
+{
+    label = "";
+    position = (390 220);
+    states = ("op" "me" "draw");
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode = "[C2:0][C3:0][C4:0][MH:0][SC:0][FC:0]";
+}
+
+potential (FC | BH)
+{
+    data
+     = (( 0.125 0.25 0.125 0.5 )	%  BH=op
+	( 0 0.428571 0 0.571429 )	%  BH=me
+	( 0 0.6 0.2 0.2 ));	%  BH=draw
+}
+
+potential (SC | BH)
+{
+    data
+     = (( 0.25 0.5 0.25 )	%  BH=op
+	( 0.142857 0.285714 0.571429 )	%  BH=me
+	( 0 0.8 0.2 ));	%  BH=draw
+}
+
+potential (MH | BH)
+{
+    data
+     = (( 0.375 0.25 0.25 0 0.125 0 0 0 )	%  BH=op
+	( 0 0.142857 0.285714 0.142857 0 0.142857 0.142857 0.142857 )	%  BH=me
+	( 0.2 0 0.6 0 0.2 0 0 0 ));	%  BH=draw
+}
+
+potential (BH)
+{
+    data = ( 0.4 0.35 0.25 );
+}

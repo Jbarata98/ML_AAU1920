@@ -1,0 +1,109 @@
+firstly , saw the documentation, a bit overwhelming at first , will look at it whilst I'm doing the notebook
+
+- inplace vs standard operations in Py ( didn't know this bs) baiscally the standard operation is an assignment like x = y+b , but the inplace operation
+changes the value of the operator , like x and y, if u do x_add(y), you change x to the value of x+y, it doesnt remain the same so you cant use it in immutable 
+structures like tuples , else use lists
+
+training set -  this data set is used to adjust the weights on the neural network.
+
+validation set - this data set is used to minimize overfitting. You're not adjusting the weights of the network with this data set,you're just verifying that any increase in accuracy over the training data set actually yields an increase in accuracy over a data set that has not been shown to the network before, or at least the network hasn't trained on it (i.e. validation data set). If the accuracy over the training data set increases, but the accuracy over the validation data set stays the same or decreases, then you're overfitting your neural network and you should stop training.
+
+testing set - this data set is used only for testing the final solution in order to confirm the actual predictive power of the network.
+
+x train  y train ( data / labels so you can calculate acc duh)
+
+batch_size = The batch size defines the number of samples that will be propagated through the network.
+
+For instance, let's say you have 1050 training samples and you want to set up a batch_size equal to 100. The algorithm takes the first 100 samples (from 1st to 100th) from the training dataset and trains the network. 
+Next, it takes the second 100 samples (from 101st to 200th) and trains the network again. We can keep doing this procedure until we have propagated all samples through of the network. 
+
+Problem might happen with the last set of samples. In our example, we've used 1050 which is not divisible by 100 without remainder. The simplest solution is just to get the final 50 samples and train the network.
+
+-----------------------------------------------------------------------------------------
+
+Advantages of using a batch size < number of all samples:
+
+It requires less memory. Since you train the network using fewer samples, the overall training procedure requires less memory. That's especially important if you are not able to fit the whole dataset in your machine's memory.
+
+Typically networks train faster with mini-batches. That's because we update the weights after each propagation. In our example we've propagated 11 batches (10 of them had 100 samples and 1 had 50 samples) and after each of them we've updated our network's parameters. If we used all samples during propagation we would make only 1 update for the network's parameter.
+
+
+
+Disadvantages of using a batch size < number of all samples:
+
+The smaller the batch the less accurate the estimate of the gradient will be. In the figure below, you can see that the direction of the mini-batch gradient (green color) fluctuates much more in comparison to the direction of the full batch gradient (blue color).
+
+--------------------------------------------------------------------------------------
+
+PADDING :
+
+Adding padding to an image processed by a CNN allows for more accurate analysis of images. works by extending the area of which a convolutional neural network processes an image. The kernel is the neural networks filter which moves across the image, 
+scanning each pixel and converting the data into a smaller, or sometimes larger, format. In order to assist the kernel with processing the image, padding is added to the frame of the image to allow for more space for the kernel to cover the image. 
+
+the -1 on thhe view(), means that you don't know how many rows you want but are sure of the columns, "so give me a tensor that has these many columns and you compute the appropriate number of rows that is necessary to make this happen".
+
+Without any changes and with 2 epochs we get 96 % accuracy
+------------------------------------------------------------------------------------
+A “Kernel” refers to a 2D array of weights
+
+note about different types of convolutions :
+
+
+2D convolution : It’s a 2D convolution on a 3D volumetric data. The filter depth is same as the input layer depth. The 3D filter moves only in 2-direction (height & width of the image). The output of such operation is a 2D image (with 1 channel only).
+
+
+ 3D convolutions. They are the generalization of the 2D convolution. Here in 3D convolution, the filter depth is smaller than the input layer depth (kernel size < channel size). As a result, the 3D filter can move in all 3-direction (height, width, channel of the image). 
+ Since the filter slides through a 3D space, the output numbers are arranged in a 3D space as well. 
+ The output is then a 3D data.
+ 
+ 1 x 1 convolution. The operation is trivial for layers with only one channel. There, we multiply every element by a number. advantages of 1 x 1 convolutions are:
+Dimensionality reduction for efficient computations
+Efficient low dimensional embedding, or feature pooling
+Applying nonlinearity again after convolution
+ 
+ 
+ non-linearity allows the network to learn more complex function.(thats why we use reLU)
+ 
+ no direct relation between the kernel size and the accuracy.
+
+If you start using larger kernel you may start loosing details in some smaller features (where 3x3 would detect them better) and in other cases, where your dataset has larger features the 5x5 may start detect features that 3x3 misses.
+ 
+
+Adding layers increases the number of weights in the network, ergo the model complexity. Without a large training set, an increasingly large network is likely to overfit and in turn reduce accuracy on the test data.
+
+
+-----------------------------------------------------------------------------------------
+
+The first run with no changes there was a 96% accuracy on the  validation data.
+The first model we have 1 input channel with 15 output units and a kernel 5x5.
+
+First experiment was to change the parameters with only 1 layer , the formula for tweaking the stride and padding is ( H-F+2P)/S + 1. The best result was  by adding padding and increased the kernel size to 6x6 we got a 97 accuracy. By increasing th stride the accuracy went down to 92 and 94 %. Thats because we are jumping over important features. So lets keep the stride to 1 and keep the padding. By decreasing the size of the kernel to 4x4 , accuracy kept on the 96. There is no direct relation between the accuracy and the kernel size. It depends on the data, a big kernel size might not catch the small complex features whilst a small one can, but if ur image has large features maybe a big kernel is better. So with 4 5 6 we would get 96, less than that we decreased to 95.
+
+Changed the size of the output from 15 to 10, no changes, increased to 20 no change, increased to 32 and left it there 11564/12000 ( More feature maps will yiled better results)Theproblemwith more layers is that instead of learning more features it can start to overfit. Suppose we train a model for detecting cats. If all cats features are detected and we add more layers, it can start detecting the bell the cat is wearing as a part of the cat. It may end up classifying a cat without bell as not cat and may sometimes classify another animal with bell as cat. This is because adding more layers beyond a certain threshold leads to finding irregularities in the data. 
+
+Added another layer to the network and increased the size to 32, now the accuracy is 97. Added 2 fully connected layers but the accuracy is decreasing actually. Takes a long time and the final result was 96 and 97 on test set. 2nd experiment was with lower sizes, 2 fully connected layers and 2 layers with padding. Got 93 % accuracy. Removed softmax got the same.
+
+Tried with bigger input again but this time with less output nodes on the FC layer 500 to 100, still low.
+
+Used 1 layer, 32 input image , 2nd layer with 64. Used padding. Stride =1 , cause bigger strides were reducing the accuracy. 
+
+Optimizer steps: First used SGD but with momentum. Result: ( should converge faster) decreased the accuracy ?? Tried with higher learning rates but didnt work. If u have a small learning rate u need to train for longer. Should need more steps. With momentum increased the learning rate was 89
+
+Used adam, results : 
+Okkk the loss is always the same idk wtf is going on ahah, ok used another learning rate. 0.0005 and increased from 10 64 pc , trying with 0.0005. Needs to train longer increased the number of epochs. The problem with adam is that it needs a small learning rate and by that it needs a more time to train. A lot of time spent and the max results we are achieving are 80 pc
+Adam has by default a big momentum (inertia), so it takes a while in order to accelerate. SGD, on the other hand, accelerates instantly, as it has no momentum. Execute more iterations and you will see the value of W to increase accordingly.
+RMSPROP and Adamax are quite similar to adam so the results should be close
+
+Best model was with 1 layer max pooling dropout and vanilla SGD. Momentum wasnt working?
+
+
+
+
+
+
+
+.
+
+
+
+

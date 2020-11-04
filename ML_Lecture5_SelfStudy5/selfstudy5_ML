@@ -1,0 +1,401 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Self study 1\n",
+    "\n",
+    "In this self study you should work on the code examples below together with the associated questions. The notebook illustrates a basic neural network implementation, where we implement most of the relevant functions from scratch. Except the calculation of gradients, for which we rely on the functionality provided by PyTorch. \n",
+    "\n",
+    "The code illustrates the key concepts involved in the learning neural network. Go carefully through the code before starting to answer the questions at the end."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "First we import the modules used in this selfstudy"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import torch\n",
+    "from torchvision import datasets, transforms\n",
+    "from matplotlib import pyplot\n",
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Through torch load the MNIST data set, which we will use in this self study. The MNIST database consists of grey scale images of handwritten digits. Each image is of size $28\\times 28$; see figure below for an illustration. The data set is divided into a training set consisting of $60000$ images and a test set with $10000$ images; in both\n",
+    "data sets the images are labeled with the correct digits. If interested, you can find more information about the MNIST data set at http://yann.lecun.com/exdb/mnist/, including accuracy results for various machine learning methods.\n",
+    "\n",
+    "![MNIST DATA](MNIST-dataset.png)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Using the data loader provided by torch we have an easy way of loading in data in batches (here of size 64). We can also make various other transformation of the data, such as normalization."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "batch_size = 64\n",
+    "train_loader = torch.utils.data.DataLoader(\n",
+    "        datasets.MNIST('../data', train=True, download=True,\n",
+    "                       transform=transforms.Compose([\n",
+    "                           transforms.ToTensor(),\n",
+    "                           transforms.Normalize((0.1307,), (0.3081,))\n",
+    "                       ])),\n",
+    "        batch_size=batch_size, shuffle=True)\n",
+    "test_loader = torch.utils.data.DataLoader(\n",
+    "        datasets.MNIST('../data', train=False, transform=transforms.Compose([\n",
+    "            transforms.ToTensor(),\n",
+    "            transforms.Normalize((0.1307,), (0.3081,))\n",
+    "        ])),\n",
+    "        batch_size=batch_size, shuffle=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Each batch is a list of two elements. The first element encodes the digit and has dimensions [64,1,28,28] (the figures are greyscale with no rbg channel, hence the '1'), and the second element contains the class/label information. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Batch dimension (digit): torch.Size([64, 1, 28, 28])\n",
+      "Batch dimension (target): torch.Size([64])\n",
+      "Target: 6 with shape torch.Size([])\n"
+     ]
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "batch = iter(train_loader).next()\n",
+    "print(f\"Batch dimension (digit): {batch[0].shape}\")\n",
+    "print(f\"Batch dimension (target): {batch[1].shape}\")\n",
+    "digit_batch = batch[0]\n",
+    "img = digit_batch[0,:]\n",
+    "pyplot.imshow(img.reshape((28, 28)), cmap=\"gray\")\n",
+    "print(f\"Target: {batch[1][0]} with shape {batch[1][0].shape}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "With PyTorch we can specify that the tensors require gradients. This will make PyTorch record all operations performed on the tensors, so that we can afterwards calculate the gradients automatically using back propagation. See also the code example from the last lecture."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For the first part of this self study we will specify a neural network, which will encode a softmax function. For this we need a (randomly initialized) weight matrix and a bias, and for both of them we need their gradients wrt. our error function (yet to be defined) in order to perform learning. Note that to facilitate matrix multiplication we will flatten our image from $28\\times 28$ to $784$. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "weights = torch.randn(784, 10) / np.sqrt(784)\n",
+    "weights.requires_grad_()\n",
+    "bias = torch.zeros(10, requires_grad=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Out model specification"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def softmax(x):\n",
+    "    return x.exp() / x.exp().sum(-1).unsqueeze(-1)\n",
+    "\n",
+    "def model(xb):\n",
+    "    return softmax(xb @ weights + bias)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let's test our model (with our randomly initialized weights)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Batch shape: torch.Size([64, 784])\n",
+      "Prediction on first image tensor([0.0206, 0.3334, 0.0228, 0.2380, 0.0578, 0.0475, 0.0341, 0.0137, 0.0404,\n",
+      "        0.1917], grad_fn=<SelectBackward>)\n",
+      "Corresponding classification: 1\n"
+     ]
+    }
+   ],
+   "source": [
+    "# We flatten the digit representation so that it is consistent with the weight matrix\n",
+    "xb = digit_batch.flatten(start_dim=1)\n",
+    "print(f\"Batch shape: {xb.shape}\")\n",
+    "preds = model(xb)\n",
+    "print(f\"Prediction on first image {preds[0]}\")\n",
+    "print(f\"Corresponding classification: {preds[0].argmax()}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Next we define our loss function, in this case the log-loss (or negative log-likelihood):"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "tensor(2.6040, grad_fn=<MeanBackward0>)\n"
+     ]
+    }
+   ],
+   "source": [
+    "def nll(input, target):\n",
+    "    return (-input[range(target.shape[0]), target].log()).mean()\n",
+    "loss_func = nll\n",
+    "\n",
+    "# Make a test calculation\n",
+    "yb = batch[1]\n",
+    "print(loss_func(preds,yb))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In the end, we are interested in the accuracy of our model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def accuracy(out, yb):\n",
+    "    preds = torch.argmax(out, dim=1)\n",
+    "    return (preds == yb).float().mean()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Accuracy of model on batch (with random weights): 0.15625\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(f\"Accuracy of model on batch (with random weights): {accuracy(preds, yb)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now we are ready to combine it all and perform learning"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch: 0, B-idx: 0, Training loss: 2.5276850800016035\n",
+      "Epoch: 0, B-idx: 50, Training loss: 0.8202355519922049\n",
+      "Epoch: 0, B-idx: 100, Training loss: 0.6276062484234889\n",
+      "Epoch: 0, B-idx: 150, Training loss: 0.5404219547949874\n",
+      "Epoch: 0, B-idx: 200, Training loss: 0.4943273669875253\n"
+     ]
+    },
+    {
+     "ename": "KeyboardInterrupt",
+     "evalue": "",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mKeyboardInterrupt\u001b[0m                         Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-11-6c5b648f4cbe>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[1;32m      5\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0mepoch\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mrange\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mepochs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      6\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 7\u001b[0;31m     \u001b[0;32mfor\u001b[0m \u001b[0mbatch_idx\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0mxb\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0myb\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32min\u001b[0m \u001b[0menumerate\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mtrain_loader\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      8\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      9\u001b[0m         \u001b[0mxb\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mxb\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0msqueeze\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mflatten\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mstart_dim\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/torch/utils/data/dataloader.py\u001b[0m in \u001b[0;36m__next__\u001b[0;34m(self)\u001b[0m\n\u001b[1;32m    343\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    344\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0m__next__\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 345\u001b[0;31m         \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_next_data\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    346\u001b[0m         \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_num_yielded\u001b[0m \u001b[0;34m+=\u001b[0m \u001b[0;36m1\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    347\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_dataset_kind\u001b[0m \u001b[0;34m==\u001b[0m \u001b[0m_DatasetKind\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mIterable\u001b[0m \u001b[0;32mand\u001b[0m\u001b[0;31m \u001b[0m\u001b[0;31m\\\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/torch/utils/data/dataloader.py\u001b[0m in \u001b[0;36m_next_data\u001b[0;34m(self)\u001b[0m\n\u001b[1;32m    383\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0m_next_data\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    384\u001b[0m         \u001b[0mindex\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_next_index\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m  \u001b[0;31m# may raise StopIteration\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 385\u001b[0;31m         \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_dataset_fetcher\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfetch\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mindex\u001b[0m\u001b[0;34m)\u001b[0m  \u001b[0;31m# may raise StopIteration\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    386\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_pin_memory\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    387\u001b[0m             \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0m_utils\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mpin_memory\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mpin_memory\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdata\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/torch/utils/data/_utils/fetch.py\u001b[0m in \u001b[0;36mfetch\u001b[0;34m(self, possibly_batched_index)\u001b[0m\n\u001b[1;32m     42\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0mfetch\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mpossibly_batched_index\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     43\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mauto_collation\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 44\u001b[0;31m             \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdataset\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0midx\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0midx\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mpossibly_batched_index\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     45\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     46\u001b[0m             \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdataset\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mpossibly_batched_index\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/torch/utils/data/_utils/fetch.py\u001b[0m in \u001b[0;36m<listcomp>\u001b[0;34m(.0)\u001b[0m\n\u001b[1;32m     42\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0mfetch\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mpossibly_batched_index\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     43\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mauto_collation\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 44\u001b[0;31m             \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m[\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdataset\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0midx\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;32mfor\u001b[0m \u001b[0midx\u001b[0m \u001b[0;32min\u001b[0m \u001b[0mpossibly_batched_index\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     45\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     46\u001b[0m             \u001b[0mdata\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdataset\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mpossibly_batched_index\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/torchvision/datasets/mnist.py\u001b[0m in \u001b[0;36m__getitem__\u001b[0;34m(self, index)\u001b[0m\n\u001b[1;32m     92\u001b[0m         \u001b[0;31m# doing this so that it is consistent with all other datasets\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     93\u001b[0m         \u001b[0;31m# to return a PIL Image\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 94\u001b[0;31m         \u001b[0mimg\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mImage\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfromarray\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mimg\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mnumpy\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mmode\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;34m'L'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     95\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     96\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtransform\u001b[0m \u001b[0;32mis\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/PIL/Image.py\u001b[0m in \u001b[0;36mfromarray\u001b[0;34m(obj, mode)\u001b[0m\n\u001b[1;32m   2699\u001b[0m             \u001b[0mobj\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mobj\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtostring\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   2700\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 2701\u001b[0;31m     \u001b[0;32mreturn\u001b[0m \u001b[0mfrombuffer\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mmode\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msize\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mobj\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m\"raw\"\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mrawmode\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;36m0\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;36m1\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   2702\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   2703\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;32m~/Source/Teaching/DAT8/ML-2020/envs/lib/python3.7/site-packages/PIL/Image.py\u001b[0m in \u001b[0;36mfrombuffer\u001b[0;34m(mode, size, data, decoder_name, *args)\u001b[0m\n\u001b[1;32m   2635\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0margs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m \u001b[0;32min\u001b[0m \u001b[0m_MAPMODES\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   2636\u001b[0m             \u001b[0mim\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mnew\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mmode\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;36m1\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m-> 2637\u001b[0;31m             \u001b[0mim\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mim\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_new\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcore\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmap_buffer\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdata\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0msize\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mdecoder_name\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;36m0\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0margs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m   2638\u001b[0m             \u001b[0mim\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mreadonly\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;36m1\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m   2639\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0mim\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mKeyboardInterrupt\u001b[0m: "
+     ]
+    }
+   ],
+   "source": [
+    "epochs = 4  # how many epochs to train for\n",
+    "lr = 0.01  # learning rate\n",
+    "\n",
+    "train_losses = []\n",
+    "for epoch in range(epochs):\n",
+    "\n",
+    "    for batch_idx, (xb, yb) in enumerate(train_loader):\n",
+    "\n",
+    "        xb = xb.squeeze().flatten(start_dim=1)\n",
+    "        pred = model(xb)\n",
+    "        loss = loss_func(pred, yb)\n",
+    "        loss.backward()\n",
+    "        with torch.no_grad():\n",
+    "            weights -= weights.grad * lr\n",
+    "            bias -= bias.grad * lr\n",
+    "            weights.grad.zero_()\n",
+    "            bias.grad.zero_()\n",
+    "                    \n",
+    "            if batch_idx % 50 == 0:\n",
+    "                with torch.no_grad():\n",
+    "                    train_loss = np.mean([loss_func(model(txb.squeeze().flatten(start_dim=1)), tyb).item() for txb, tyb in train_loader])\n",
+    "                    print(f\"Epoch: {epoch}, B-idx: {batch_idx}, Training loss: {train_loss}\")\n",
+    "                    train_losses.append(train_loss)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Plot the evolution of the training loss"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[<matplotlib.lines.Line2D at 0x127029e10>]"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "plt.plot(range(len(train_losses)), train_losses)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "__Exercise:__ \n",
+    "1. Experiment with different variations of the gradient descent implementation; try varying the learning rate and the batch size. Assuming that you have a fixed time budget (say 2 minutes for learning), what can we then say about the effect of changing the parameters?\n",
+    "2. Implement momentum in the learning algorithm. How does it affect the results?\n",
+    "3. Try with different initialization schemes for the parameters (e.g. allowing for larger values). How does it affect the behavior of the algorithm?\n",
+    "4. Analyze the behavior of the algorithm on the test set and implement a method for evaluating the accuracy over the entire training/test set (for inspiration, see Line 21 above)."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "ML-2020",
+   "language": "python",
+   "name": "ml-2020"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

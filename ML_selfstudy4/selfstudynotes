@@ -1,0 +1,7 @@
+-- Implemented the code by myself ( not sure if its correct since there might be mistakes in my implementation)
+
+-- The results seem pretty stable after a couple of iterations
+
+-- weights affect the accuracy. Need to report in how they do affect it
+
+-- Didnt implement gridsearch but could be something useful
